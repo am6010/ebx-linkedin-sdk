@@ -39,6 +39,7 @@ import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.MultipartContent;
+import com.google.api.client.http.UrlEncodedContent;
 import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
@@ -71,7 +72,7 @@ public class DefaultWebRequestor implements WebRequestor {
   /**
    * Arbitrary unique boundary marker for multipart {@code POST}s.
    */
-  private static final String MULTIPART_BOUNDARY =
+  public static final String MULTIPART_BOUNDARY =
       "**boundarystringwhichwill**neverbeencounteredinthewild**";
 
   /**
@@ -222,9 +223,17 @@ public class DefaultWebRequestor implements WebRequestor {
   public Response executePost(String url, String parameters, String jsonBody) throws IOException {
     return executePost(url, parameters, jsonBody, null, new BinaryAttachment[0]);
   }
-
+  
   @Override
   public Response executePost(String url, String parameters, String jsonBody,
+      Map<String, String> headers,
+      BinaryAttachment... binaryAttachments)
+      throws IOException {
+    return executePost(url, parameters, jsonBody, null, headers, binaryAttachments);
+  }
+
+  @Override
+  public Response executePost(String url, String parameters, String jsonBody, String tunnelQuery,
       Map<String, String> headers,
       BinaryAttachment... binaryAttachments)
       throws IOException {
@@ -253,8 +262,14 @@ public class DefaultWebRequestor implements WebRequestor {
       if (binaryAttachments.length > 0) {
         // Set the media type
         MultipartContent content = new MultipartContent()
-            .setMediaType(new HttpMediaType("multipart/form-data")
+            .setMediaType(new HttpMediaType("multipart/mixed")
                 .setParameter("boundary", MULTIPART_BOUNDARY));
+  
+        if (StringUtils.isNotBlank(tunnelQuery)) {
+          MultipartContent.Part part =
+              new MultipartContent.Part(new UrlEncodedContent(tunnelQuery));
+          content.addPart(part);
+        }
         
         for (BinaryAttachment binaryAttachment : binaryAttachments) {
           MultipartContent.Part part = new MultipartContent.Part(

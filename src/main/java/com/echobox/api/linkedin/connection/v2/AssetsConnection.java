@@ -52,6 +52,7 @@ public class AssetsConnection extends ConnectionBaseV2 {
   private static final String ACTION_KEY = "action";
   private static final String REGISTER_UPLOAD = "registerUpload";
   private static final String COMPLETE_MULTIPART_UPLOAD = "completeMultiPartUpload";
+  private static final String BOUNDARY = "<BOUNDARY>";
   
   /**
    * Register upload request service relationships identifier
@@ -163,9 +164,12 @@ public class AssetsConnection extends ConnectionBaseV2 {
   public static Map<String, String> uploadAsset(WebRequestor webRequestor, URL uploadURL,
       Map<String, String> headers, String filename, byte[] bytes) {
     WebRequestor.Response response;
+    headers.put("X-HTTP-Method-Override", "PUT");
+    String query = uploadURL.getQuery();
+    String urlStr = uploadURL.toString().split("\\?")[0];
     try {
-      response = webRequestor.executePut(uploadURL.toString(), null, null, headers,
-          BinaryAttachment.with(filename, bytes));
+      response = webRequestor.executePost(urlStr, null, null, 
+          query, headers, BinaryAttachment.with(filename, bytes));
     } catch (Exception ex) {
       throw new LinkedInNetworkException("LinkedIn request failed to upload the asset", ex);
     }

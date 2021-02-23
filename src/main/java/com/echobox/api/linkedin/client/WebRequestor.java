@@ -154,6 +154,9 @@ public interface WebRequestor {
       Map<String, String> headers, BinaryAttachment... binaryAttachments)
       throws IOException;
   
+  Response executePost(String url, String parameters, String jsonBody, String tunnelQuery,
+      Map<String, String> headers, BinaryAttachment... binaryAttachments) throws IOException;
+  
   Response executePut(String url, String parameters, String jsonBody,
       Map<String, String> headers, BinaryAttachment binaryAttachments)
       throws IOException;
